@@ -50,20 +50,26 @@ export default function SettingsPage() {
     enabled: false,
     times: {
       workout: '17:30',
+      water: '10:00',
+      meals: '13:00',
       study: '09:00',
       coding: '14:00',
-      habits: '12:00',
-      journal: '21:30',
+      activity: '19:00',
       sleep: '22:30',
+      journal: '21:30',
+      habits: '12:00',
       weekly: '10:00',
     },
     reminders: {
       workout: false,
+      water: false,
+      meals: false,
       study: false,
       coding: false,
-      habits: false,
-      journal: false,
+      activity: false,
       sleep: false,
+      journal: false,
+      habits: false,
       weekly: false,
     },
   };
@@ -315,11 +321,14 @@ export default function SettingsPage() {
         <div className="space-y-3 pt-1">
           {[
             { key: 'workout', label: 'Workout Reminder', desc: 'Contextual notification with today\'s split (e.g. "Today\'s workout: Chest + Triceps")' },
+            { key: 'water', label: 'Water Hydration Reminder', desc: 'Hydration prompt to drink water and maintain your daily intake target' },
+            { key: 'meals', label: 'Meals & Nutrition Reminder', desc: 'Timed reminder for breakfast, lunch, or dinner boundary' },
             { key: 'study', label: 'Study & Course Reminder', desc: 'Notifies your scheduled course and next incomplete topic' },
             { key: 'coding', label: 'Coding Practice Reminder', desc: 'Notifies your scheduled programming language block' },
-            { key: 'habits', label: 'Daily Habit Checkpoint', desc: 'Midday check-in to ensure you do not break the habit chain' },
-            { key: 'journal', label: 'Evening Reflection & Win', desc: 'Gentle prompt to log your daily win and friction analysis' },
+            { key: 'activity', label: 'Daily Activity & Steps Reminder', desc: 'Reminder to hit your daily non-negotiable step count' },
             { key: 'sleep', label: 'Sleep Wind-Down Boundary', desc: '30-minute boundary alert before your target bedtime' },
+            { key: 'journal', label: 'Evening Reflection & Win', desc: 'Gentle prompt to log your daily win and friction analysis' },
+            { key: 'habits', label: 'Daily Habit Checkpoint', desc: 'Midday check-in to ensure you do not break the habit chain' },
             { key: 'weekly', label: 'Sunday Weekly Retrospective', desc: 'Sunday morning prompt to review the past week\'s execution' },
           ].map((item) => {
             const isChecked = notifSettings.reminders?.[item.key] === true;

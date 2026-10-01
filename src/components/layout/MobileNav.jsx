@@ -19,13 +19,16 @@ import {
   Award,
   Settings,
   CalendarDays,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 export default function MobileNav() {
   const [trackOpen, setTrackOpen] = useState(false);
 
   const trackerItems = [
+    { to: '/setup', label: 'Routine Setup', icon: SlidersHorizontal },
     { to: '/routine', label: 'My Routine', icon: CalendarDays },
+    { to: '/today', label: 'Checklist', icon: CalendarCheck },
     { to: '/habits', label: 'Habits', icon: CheckSquare },
     { to: '/fitness', label: 'Fitness', icon: Dumbbell },
     { to: '/study', label: 'Study', icon: BookOpen },
@@ -36,7 +39,7 @@ export default function MobileNav() {
     { to: '/journal', label: 'Journal', icon: PenLine },
     { to: '/analytics', label: 'Analytics', icon: BarChart3 },
     { to: '/achievements', label: 'Achievements', icon: Award },
-    { to: '/settings', label: 'Settings', icon: Settings },
+    { to: '/profile', label: 'Profile', icon: User },
   ];
 
   const navClass = ({ isActive }) =>
@@ -46,20 +49,25 @@ export default function MobileNav() {
 
   return (
     <>
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#E2E8F0] px-2 flex items-center justify-around select-none">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#E2E8F0] px-2 flex items-center justify-around select-none shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
         <NavLink to="/" end className={navClass}>
           <LayoutDashboard size={18} className="mb-0.5" />
           <span>Home</span>
         </NavLink>
 
-        <NavLink to="/today" className={navClass}>
-          <CalendarCheck size={18} className="mb-0.5" />
-          <span>Today</span>
+        <NavLink to="/setup" className={navClass}>
+          <SlidersHorizontal size={18} className="mb-0.5" />
+          <span>Setup</span>
         </NavLink>
 
         <NavLink to="/journey" className={navClass}>
           <Compass size={18} className="mb-0.5" />
-          <span>Journey</span>
+          <span>Progress</span>
+        </NavLink>
+
+        <NavLink to="/settings" className={navClass}>
+          <Settings size={18} className="mb-0.5" />
+          <span>Settings</span>
         </NavLink>
 
         <button
@@ -68,13 +76,8 @@ export default function MobileNav() {
           className="flex flex-col items-center justify-center flex-1 py-2 text-[10px] font-semibold text-[#64748B] hover:text-[#0F172A]"
         >
           <Layers size={18} className="mb-0.5" />
-          <span>Track</span>
+          <span>More</span>
         </button>
-
-        <NavLink to="/profile" className={navClass}>
-          <User size={18} className="mb-0.5" />
-          <span>Profile</span>
-        </NavLink>
       </nav>
 
       {/* Track Overlay Drawer */}

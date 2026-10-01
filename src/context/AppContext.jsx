@@ -272,15 +272,16 @@ export function AppProvider({ children }) {
       const automated = buildAutomatedDayPlan(
         dayNum,
         dateStr,
+        prev.routineConfig,
         prev.routine,
         prev.courses,
         prev.codingConfig,
         prev.habits,
-        prev.revisions
+        prev.revisions,
+        day
       );
 
       const existingTasks = day.tasks || [];
-      // Keep track of which automated task types already have a completed match
       const mergedTasks = automated.map(autoTask => {
         const match = existingTasks.find(e =>
           e.id === autoTask.id || (e.category === autoTask.category && e.title.startsWith(autoTask.title.slice(0, 15)))
@@ -291,18 +292,18 @@ export function AppProvider({ children }) {
             id: match.id,
             completed: match.completed,
             status: match.status || (match.completed ? 'completed' : 'pending'),
+            time: match.time || autoTask.time,
           };
         }
         return autoTask;
       });
 
-      // Also append any purely custom user tasks that were added
-      const customTasks = existingTasks.filter(e => !e.isAutomated && !mergedTasks.some(m => m.id === e.id));
+      const customTasks = existingTasks.filter(e => !e.type && !mergedTasks.some(m => m.id === e.id));
       const finalTasks = [...mergedTasks, ...customTasks];
+      finalTasks.sort((a, b) => (a.time || '12:00').localeCompare(b.time || '12:00'));
 
-      const isRest = prev.routine?.[getDayOfWeekKey(dateStr)]?.isRestDay;
       const updatedDay = { ...day, tasks: finalTasks };
-      const { total } = calculateDailyScore(updatedDay, isRest);
+      const { total } = calculateDailyScore(updatedDay);
       updatedDay.score = total;
 
       return {
@@ -311,6 +312,134 @@ export function AppProvider({ children }) {
       };
     });
   }, [activeDayNumber]);
+
+  // UPDATE ROUTINE CONFIG (From Simple Setup)
+  const updateRoutineConfig = useCallback((updates) => {
+    setData(prev => {
+      const nextConfig = {
+        ...(prev.routineConfig || {}),
+        ...updates,
+      };
+
+      const day = prev.days[activeDayNumber] || {};
+      const dateStr = getDateForDay(activeDayNumber);
+      const newTasks = buildAutomatedDayPlan(
+        activeDayNumber,
+        dateStr,
+        nextConfig,
+        prev.routine,
+        prev.courses,
+        prev.codingConfig,
+        prev.habits,
+        prev.revisions,
+        day
+      );
+
+      const updatedDay = { ...day, tasks: newTasks };
+      const { total } = calculateDailyScore(updatedDay);
+      updatedDay.score = total;
+
+      return {
+        ...prev,
+        routineConfig: nextConfig,
+        days: {
+          ...prev.days,
+          [activeDayNumber]: updatedDay,
+        },
+      };
+    });
+    showToast('Routine configuration updated!', 'success');
+  }, [activeDayNumber, showToast]);
+
+  // QUICK WATER TRACKING
+  const quickAddWater = useCallback((amountMl, dayNum = activeDayNumber) => {
+    if (isFutureDay(dayNum)) {
+      showToast('Cannot log water for future dates.', 'warning');
+      return;
+    }
+    const deltaLiters = amountMl / 1000;
+    setData(prev => {
+      const day = prev.days[dayNum] || {};
+      const currentWater = day.nutrition?.water || 0;
+      const nextWater = Number((currentWater + deltaLiters).toFixed(2));
+      const updatedNutrition = { ...(day.nutrition || {}), water: nextWater };
+
+      const tasks = (day.tasks || []).map(t => {
+        if (t.type === 'water') {
+          return { ...t, completed: nextWater >= 0.5, status: nextWater >= 0.5 ? 'completed' : t.status };
+        }
+        return t;
+      });
+
+      const updatedDay = { ...day, nutrition: updatedNutrition, tasks };
+      const { total } = calculateDailyScore(updatedDay);
+      updatedDay.score = total;
+
+      return {
+        ...prev,
+        days: { ...prev.days, [dayNum]: updatedDay },
+      };
+    });
+    showToast(`+${amountMl}ml Water logged`, 'info');
+  }, [activeDayNumber, isFutureDay, showToast]);
+
+  const resetWater = useCallback((dayNum = activeDayNumber) => {
+    setData(prev => {
+      const day = prev.days[dayNum] || {};
+      return {
+        ...prev,
+        days: {
+          ...prev.days,
+          [dayNum]: { ...day, nutrition: { ...(day.nutrition || {}), water: 0 } },
+        },
+      };
+    });
+    showToast('Water counter reset', 'info');
+  }, [activeDayNumber, showToast]);
+
+  // SIMPLE MEAL LOGGING
+  const updateMeal = useCallback((dayNum, mealType, mealData) => {
+    if (isFutureDay(dayNum)) {
+      showToast('Cannot log meals for future dates.', 'warning');
+      return;
+    }
+    setData(prev => {
+      const day = prev.days[dayNum] || {};
+      const meals = day.meals || {
+        breakfast: { time: '08:00', description: '', completed: false },
+        lunch: { time: '13:00', description: '', completed: false },
+        dinner: { time: '20:00', description: '', completed: false },
+        snacks: { time: '16:30', description: '', completed: false },
+      };
+      const currentMeal = meals[mealType] || { time: '12:00', description: '', completed: false };
+      const updatedMeal = { ...currentMeal, ...mealData };
+      const nextMeals = { ...meals, [mealType]: updatedMeal };
+
+      const tasks = (day.tasks || []).map(t => {
+        if (t.type === 'meal' && t.mealType === mealType) {
+          const mLabel = mealType.charAt(0).toUpperCase() + mealType.slice(1);
+          return {
+            ...t,
+            title: updatedMeal.description ? `${mLabel}: ${updatedMeal.description}` : `${mLabel} (Tap to add meal)`,
+            completed: updatedMeal.completed !== undefined ? updatedMeal.completed : t.completed,
+            status: updatedMeal.completed ? 'completed' : 'pending',
+            time: updatedMeal.time || t.time,
+          };
+        }
+        return t;
+      });
+
+      const updatedDay = { ...day, meals: nextMeals, tasks };
+      const { total } = calculateDailyScore(updatedDay);
+      updatedDay.score = total;
+
+      return {
+        ...prev,
+        days: { ...prev.days, [dayNum]: updatedDay },
+      };
+    });
+    showToast('Meal updated', 'success');
+  }, [isFutureDay, showToast]);
 
   // HABITS
   const addHabit = useCallback((newHabit) => {
@@ -1354,6 +1483,10 @@ export function AppProvider({ children }) {
         deleteTask,
         addTask,
         syncAutomatedDayPlan,
+        updateRoutineConfig,
+        quickAddWater,
+        resetWater,
+        updateMeal,
         // Habits
         addHabit,
         toggleHabit,

@@ -19,9 +19,9 @@ export const WEEKDAY_LABELS = {
   sunday: 'Sunday',
 };
 
-// Calculate the current Day (1 to 100) dynamically from actual date
+// Calculate current Day (1 to 100) dynamically from actual date
 export function calculateCurrentDayNumber() {
-  const start = new Date(2026, 9, 1); // Month is 0-indexed: 9 = October
+  const start = new Date(2026, 9, 1); // Month 9 = October
   const now = new Date();
   const startUtc = Date.UTC(2026, 9, 1);
   const nowUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
@@ -29,10 +29,10 @@ export function calculateCurrentDayNumber() {
 
   if (diffDays < 0) return 1; // Before start date => Day 1
   if (diffDays >= 100) return 100; // Past 100 days
-  return diffDays + 1; // e.g. Oct 1 -> Day 1, Oct 2 -> Day 2
+  return diffDays + 1; // Oct 1 -> Day 1, Oct 2 -> Day 2
 }
 
-// Generate the 100-day date string for Day N
+// Generate date string for Day N
 export function getDateForDay(dayNumber) {
   const start = new Date(2026, 9, 1);
   start.setDate(start.getDate() + (dayNumber - 1));
@@ -73,9 +73,6 @@ export const INITIAL_ACHIEVEMENTS = [
   { id: 'streak_30', title: '30-Day Streak', desc: 'One full month without breaking the chain', icon: 'Award', unlocked: false, unlockedAt: null },
   { id: 'streak_50', title: '50-Day Streak', desc: 'Halfway through the 100-day storm', icon: 'Compass', unlocked: false, unlockedAt: null },
   { id: 'streak_75', title: '75-Day Streak', desc: 'Unshakable transformation standard', icon: 'Sparkles', unlocked: false, unlockedAt: null },
-  { id: 'workouts_10', title: '10 Workouts Logged', desc: 'Complete 10 training sessions', icon: 'Dumbbell', unlocked: false, unlockedAt: null },
-  { id: 'study_50', title: '50 Study Hours', desc: 'Clock 50 hours of deep learning', icon: 'BookOpen', unlocked: false, unlockedAt: null },
-  { id: 'coding_50', title: '50 Coding Hours', desc: 'Clock 50 hours of software practice', icon: 'Code', unlocked: false, unlockedAt: null },
   { id: 'streak_100', title: '100-Day Survivor', desc: 'Complete the full Winter Arc challenge', icon: 'Trophy', unlocked: false, unlockedAt: null },
 ];
 
@@ -114,23 +111,67 @@ export function calculateLevel(xp = 0) {
   };
 }
 
-// Clean Empty Routine Creator (Zero dummy data, user configures each day)
+// Simple Setup Defaults
+export const DEFAULT_ROUTINE_CONFIG = {
+  // Daily routine times
+  wakeUpTime: '06:30',
+  breakfastTime: '08:00',
+  lunchTime: '13:00',
+  dinnerTime: '20:00',
+  sleepTime: '22:30',
+
+  // Health
+  waterGoalLiters: 3.0,
+  waterReminderIntervalHours: 2,
+  waterRemindersEnabled: false,
+  workoutEnabled: true,
+  workoutTime: '17:30',
+  stepsGoal: 10000,
+  activityEnabled: true,
+  activityTime: '19:00',
+
+  // Study
+  studyEnabled: true,
+  studyTime: '09:00',
+  courseName: 'DBMS',
+  courseCode: '24CSXXXX',
+  currentTopic: 'Normalization',
+
+  // Coding
+  codingEnabled: true,
+  codingTime: '14:30',
+  codingLanguage: 'Java',
+  codingDurationMins: 60,
+
+  // Other
+  journalEnabled: true,
+  journalTime: '21:30',
+  meditationEnabled: false,
+  meditationTime: '07:00',
+
+  // Active days
+  workoutDays: ['monday', 'wednesday', 'friday'],
+  studyDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
+  codingDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+};
+
+// Clean Empty Routine Creator
 export function createEmptyRoutine() {
   const routine = {};
   for (const day of ORDERED_WEEKDAYS) {
     routine[day] = {
-      workoutFocus: '', // e.g. "Chest + Triceps" or empty
-      exercises: [], // [{ id, name, sets: 3, reps: 10, weight: 0, restTime: 60 }]
-      courseId: '', // user's course ID
-      codingLang: '', // e.g. "Java"
-      other: '', // e.g. "Reading" or "Project"
-      isRestDay: false, // if true => Recovery Day
+      workoutFocus: day === 'monday' ? 'Chest + Triceps' : day === 'wednesday' ? 'Legs + Core' : day === 'friday' ? 'Back + Biceps' : '',
+      exercises: [],
+      courseId: '',
+      codingLang: 'Java',
+      other: '',
+      isRestDay: day === 'sunday' || day === 'tuesday' || day === 'thursday' || day === 'saturday',
     };
   }
   return routine;
 }
 
-// Find the NEXT incomplete topic in a course
+// Find NEXT incomplete topic in a course
 export function getNextIncompleteTopic(course) {
   if (!course || !course.units || !Array.isArray(course.units)) return null;
   for (const unit of course.units) {
@@ -149,7 +190,7 @@ export function getNextIncompleteTopic(course) {
   return null;
 }
 
-// Create Spaced Repetition Revision Schedule (1 day, 3 days, 7 days, 14 days)
+// Spaced Repetition Revision Schedule (1 day, 3 days, 7 days, 14 days)
 export function createRevisionSchedule(topicId, topicName, courseId, courseName, completedDateStr) {
   const intervals = [1, 3, 7, 14];
   const [y, m, d] = (completedDateStr || '2026-10-01').split('-');
@@ -177,7 +218,7 @@ export function createRevisionSchedule(topicId, topicName, courseId, courseName,
   });
 }
 
-// Track previous workout performance (strict real history, never fabricate)
+// Track previous workout performance (strict real history)
 export function getLastPerformanceForExercise(workoutHistory, exerciseName) {
   if (!workoutHistory || !Array.isArray(workoutHistory) || !exerciseName) return null;
   const cleanName = exerciseName.trim().toLowerCase();
@@ -198,319 +239,227 @@ export function getLastPerformanceForExercise(workoutHistory, exerciseName) {
   return null;
 }
 
-// Build Automated Smart Day Plan based on Day of Week + Routine + Topics + Revisions
-export function buildAutomatedDayPlan(dayNumber, dateStr, routine = {}, courses = [], codingConfig = {}, habits = [], revisions = []) {
+// Build Automated Smart Day Plan: Clean Chronological Timeline
+// 🌅 Wake Up -> 💧 Water -> 🍳 Breakfast -> 📚 Study -> 💻 Coding -> 🏋️ Workout -> 🍛 Lunch -> 🚶 Activity -> 🍽️ Dinner -> 📝 Journal -> 😴 Sleep
+export function buildAutomatedDayPlan(dayNumber, dateStr, routineConfig = DEFAULT_ROUTINE_CONFIG, routine = {}, courses = [], codingConfig = {}, habits = [], revisions = [], existingDayData = null) {
+  const cfg = { ...DEFAULT_ROUTINE_CONFIG, ...(routineConfig || {}) };
   const weekdayKey = getDayOfWeekKey(dateStr);
-  const dayRoutine = routine[weekdayKey] || {
-    workoutFocus: '',
-    exercises: [],
-    courseId: '',
-    codingLang: '',
-    other: '',
-    isRestDay: false,
-  };
+  const dayRoutine = routine[weekdayKey] || {};
+  const isRest = dayRoutine.isRestDay || !cfg.workoutDays?.includes(weekdayKey);
 
   const tasks = [];
 
-  // 1. MORNING
+  // 1. 🌅 Wake Up
   tasks.push({
-    id: `auto-m1-${dayNumber}`,
-    title: 'Wake up on time',
-    time: '06:00',
+    id: `auto-wake-${dayNumber}`,
+    title: 'Wake Up on Time',
+    time: cfg.wakeUpTime || '06:30',
+    icon: '🌅',
     category: 'morning',
     completed: false,
     status: 'pending',
-    xp: 10,
-    isAutomated: true,
-  });
-  tasks.push({
-    id: `auto-m2-${dayNumber}`,
-    title: 'Hydrate 500ml water',
-    time: '06:15',
-    category: 'morning',
-    completed: false,
-    status: 'pending',
-    xp: 5,
-    isAutomated: true,
-  });
-  tasks.push({
-    id: `auto-m3-${dayNumber}`,
-    title: 'Morning planning & day review',
-    time: '07:00',
-    category: 'morning',
-    completed: false,
-    status: 'pending',
-    xp: 10,
-    isAutomated: true,
+    type: 'routine',
   });
 
-  // 2. FOCUS - STUDY & CODING
-  // Study Course + Topic
-  if (dayRoutine.courseId) {
-    const course = courses.find(c => c.id === dayRoutine.courseId);
-    if (course) {
-      const nextTopic = getNextIncompleteTopic(course);
-      const topicLabel = nextTopic ? ` · Topic: ${nextTopic.name}` : ' · All topics completed!';
-      tasks.push({
-        id: `auto-study-${dayNumber}`,
-        title: `Study: ${course.name}${topicLabel}`,
-        time: '09:00',
-        category: 'focus',
-        completed: false,
-        status: 'pending',
-        xp: 25,
-        courseId: course.id,
-        topicId: nextTopic?.id || null,
-        isAutomated: true,
-      });
-    } else {
-      tasks.push({
-        id: `auto-study-${dayNumber}`,
-        title: 'Study session',
-        time: '09:00',
-        category: 'focus',
-        completed: false,
-        status: 'pending',
-        xp: 20,
-        isAutomated: true,
-      });
-    }
-  } else {
+  // 2. 💧 Water (Morning Hydration)
+  tasks.push({
+    id: `auto-water-morning-${dayNumber}`,
+    title: 'Hydrate 500ml Water',
+    time: '07:00',
+    icon: '💧',
+    category: 'morning',
+    completed: false,
+    status: 'pending',
+    type: 'water',
+  });
+
+  // 3. 🍳 Breakfast
+  const bfastDesc = existingDayData?.meals?.breakfast?.description;
+  tasks.push({
+    id: `auto-breakfast-${dayNumber}`,
+    title: bfastDesc ? `Breakfast: ${bfastDesc}` : 'Breakfast (Tap to add meal)',
+    time: cfg.breakfastTime || '08:00',
+    icon: '🍳',
+    category: 'morning',
+    completed: existingDayData?.meals?.breakfast?.completed || false,
+    status: existingDayData?.meals?.breakfast?.completed ? 'completed' : 'pending',
+    type: 'meal',
+    mealType: 'breakfast',
+  });
+
+  // 4. 📚 Study (only if study enabled & today is active study day)
+  if (cfg.studyEnabled !== false && (cfg.studyDays || []).includes(weekdayKey)) {
+    const course = courses.find(c => c.id === dayRoutine.courseId) || courses[0];
+    const nextTopic = course ? getNextIncompleteTopic(course) : null;
+    const cName = course?.name || cfg.courseName || 'Deep Study';
+    const tName = nextTopic?.name || cfg.currentTopic || 'Session';
+
     tasks.push({
       id: `auto-study-${dayNumber}`,
-      title: 'Study session',
-      time: '09:00',
+      title: `Study: ${cName} — ${tName}`,
+      time: cfg.studyTime || '09:00',
+      icon: '📚',
       category: 'focus',
       completed: false,
       status: 'pending',
-      xp: 20,
-      isAutomated: true,
+      type: 'study',
+      courseId: course?.id || null,
+      topicId: nextTopic?.id || null,
     });
   }
 
-  // Due Revisions for today
+  // 4b. Due Spaced Revisions for today
   const dueRevs = (revisions || []).filter(r => r.dueDate === dateStr && !r.completed);
   dueRevs.forEach((rev, idx) => {
     tasks.push({
       id: `auto-rev-${rev.id}-${idx}`,
       title: `Revision: ${rev.topicName} (${rev.courseName} · ${rev.intervalDays}d review)`,
       time: '11:30',
+      icon: '🔄',
       category: 'focus',
       completed: false,
       status: 'pending',
-      xp: 20,
+      type: 'revision',
       revisionId: rev.id,
-      isAutomated: true,
     });
   });
 
-  // Coding Language from Routine or Schedule
-  const codingLang = dayRoutine.codingLang || codingConfig.schedule?.[weekdayKey] || '';
-  if (codingLang) {
+  // 5. 💻 Coding (only if coding enabled & today is active coding day)
+  if (cfg.codingEnabled !== false && (cfg.codingDays || []).includes(weekdayKey)) {
+    const lang = dayRoutine.codingLang || cfg.codingLanguage || 'Java';
     tasks.push({
       id: `auto-code-${dayNumber}`,
-      title: `Coding: ${codingLang} session`,
-      time: '14:00',
+      title: `Coding: ${lang} Practice (${cfg.codingDurationMins || 60}m)`,
+      time: cfg.codingTime || '14:30',
+      icon: '💻',
       category: 'focus',
       completed: false,
       status: 'pending',
-      xp: 25,
-      codingLang,
-      isAutomated: true,
-    });
-  } else {
-    tasks.push({
-      id: `auto-code-${dayNumber}`,
-      title: 'Coding practice',
-      time: '14:00',
-      category: 'focus',
-      completed: false,
-      status: 'pending',
-      xp: 20,
-      isAutomated: true,
+      type: 'coding',
     });
   }
 
-  // Other focus (e.g. Reading, Project)
-  if (dayRoutine.other) {
-    tasks.push({
-      id: `auto-other-${dayNumber}`,
-      title: `${dayRoutine.other}`,
-      time: '16:00',
-      category: 'focus',
-      completed: false,
-      status: 'pending',
-      xp: 15,
-      isAutomated: true,
-    });
+  // 6. 🏋️ Workout (only if workout enabled)
+  if (cfg.workoutEnabled !== false) {
+    if (isRest) {
+      tasks.push({
+        id: `auto-workout-${dayNumber}`,
+        title: 'Recovery / Rest Day (Light Walk & Rest)',
+        time: cfg.workoutTime || '17:30',
+        icon: '🛌',
+        category: 'health',
+        completed: false,
+        status: 'pending',
+        type: 'workout',
+        isRestDay: true,
+      });
+    } else {
+      const splitName = dayRoutine.workoutFocus || 'Strength Training';
+      tasks.push({
+        id: `auto-workout-${dayNumber}`,
+        title: `Workout: ${splitName}`,
+        time: cfg.workoutTime || '17:30',
+        icon: '🏋️',
+        category: 'health',
+        completed: false,
+        status: 'pending',
+        type: 'workout',
+        workoutFocus: splitName,
+      });
+    }
   }
 
-  // 3. HEALTH & WORKOUT
-  if (dayRoutine.isRestDay) {
-    tasks.push({
-      id: `auto-workout-${dayNumber}`,
-      title: 'Recovery Day (Mobility / Light Walk / Rest)',
-      time: '17:30',
-      category: 'health',
-      completed: false,
-      status: 'pending',
-      xp: 15,
-      isRestDay: true,
-      isAutomated: true,
-    });
-  } else if (dayRoutine.workoutFocus) {
-    const exCount = (dayRoutine.exercises || []).length;
-    const countLabel = exCount > 0 ? ` (${exCount} exercises)` : '';
-    tasks.push({
-      id: `auto-workout-${dayNumber}`,
-      title: `Workout: ${dayRoutine.workoutFocus}${countLabel}`,
-      time: '17:30',
-      category: 'health',
-      completed: false,
-      status: 'pending',
-      xp: 30,
-      workoutFocus: dayRoutine.workoutFocus,
-      isAutomated: true,
-    });
-  } else {
-    tasks.push({
-      id: `auto-workout-${dayNumber}`,
-      title: 'Workout session',
-      time: '17:30',
-      category: 'health',
-      completed: false,
-      status: 'pending',
-      xp: 25,
-      isAutomated: true,
-    });
-  }
-
+  // 7. 🍛 Lunch
+  const lunchDesc = existingDayData?.meals?.lunch?.description;
   tasks.push({
-    id: `auto-h2-${dayNumber}`,
-    title: 'Daily steps target (10,000 steps)',
-    time: '19:00',
+    id: `auto-lunch-${dayNumber}`,
+    title: lunchDesc ? `Lunch: ${lunchDesc}` : 'Lunch (Tap to add meal)',
+    time: cfg.lunchTime || '13:00',
+    icon: '🍛',
     category: 'health',
-    completed: false,
-    status: 'pending',
-    xp: 15,
-    isAutomated: true,
+    completed: existingDayData?.meals?.lunch?.completed || false,
+    status: existingDayData?.meals?.lunch?.completed ? 'completed' : 'pending',
+    type: 'meal',
+    mealType: 'lunch',
   });
 
+  // 8. 🚶 Activity / Steps (only if activity enabled)
+  if (cfg.activityEnabled !== false) {
+    tasks.push({
+      id: `auto-activity-${dayNumber}`,
+      title: `Daily Activity Goal (${(cfg.stepsGoal || 10000).toLocaleString()} steps)`,
+      time: cfg.activityTime || '19:00',
+      icon: '🚶',
+      category: 'health',
+      completed: false,
+      status: 'pending',
+      type: 'activity',
+    });
+  }
+
+  // 9. 🍽️ Dinner
+  const dinnerDesc = existingDayData?.meals?.dinner?.description;
   tasks.push({
-    id: `auto-h3-${dayNumber}`,
-    title: 'Clean nutrition & protein goal',
-    time: '20:00',
-    category: 'health',
-    completed: false,
-    status: 'pending',
-    xp: 15,
-    isAutomated: true,
+    id: `auto-dinner-${dayNumber}`,
+    title: dinnerDesc ? `Dinner: ${dinnerDesc}` : 'Dinner (Tap to add meal)',
+    time: cfg.dinnerTime || '20:00',
+    icon: '🍽️',
+    category: 'evening',
+    completed: existingDayData?.meals?.dinner?.completed || false,
+    status: existingDayData?.meals?.dinner?.completed ? 'completed' : 'pending',
+    type: 'meal',
+    mealType: 'dinner',
   });
 
-  // 4. EVENING
+  // 10. 📝 Journal (only if journal enabled)
+  if (cfg.journalEnabled !== false) {
+    tasks.push({
+      id: `auto-journal-${dayNumber}`,
+      title: 'Daily Journal Reflection & Win',
+      time: cfg.journalTime || '21:30',
+      icon: '📝',
+      category: 'evening',
+      completed: false,
+      status: 'pending',
+      type: 'journal',
+    });
+  }
+
+  // 11. 😴 Sleep
   tasks.push({
-    id: `auto-e1-${dayNumber}`,
-    title: 'Daily journal reflection & win of the day',
-    time: '21:30',
+    id: `auto-sleep-${dayNumber}`,
+    title: 'Sleep Wind-Down & 8h Rest',
+    time: cfg.sleepTime || '22:30',
+    icon: '😴',
     category: 'evening',
     completed: false,
     status: 'pending',
-    xp: 10,
-    isAutomated: true,
+    type: 'sleep',
   });
-  tasks.push({
-    id: `auto-e2-${dayNumber}`,
-    title: 'Review today\'s execution & tomorrow prep',
-    time: '22:00',
-    category: 'evening',
-    completed: false,
-    status: 'pending',
-    xp: 10,
-    isAutomated: true,
-  });
-  tasks.push({
-    id: `auto-e3-${dayNumber}`,
-    title: 'Sleep preparation & wind-down',
-    time: '22:30',
-    category: 'evening',
-    completed: false,
-    status: 'pending',
-    xp: 10,
-    isAutomated: true,
-  });
+
+  // Sort chronologically by time
+  tasks.sort((a, b) => (a.time || '12:00').localeCompare(b.time || '12:00'));
 
   return tasks;
 }
 
-// Calculate Daily Score only from real recorded information:
-// Tasks: 30% | Fitness: 20% | Study: 20% | Coding: 15% | Sleep: 10% | Journal: 5%
-export function calculateDailyScore(dayData, isRestDay = false) {
-  if (!dayData) return { total: 0, breakdown: { tasks: 0, fitness: 0, study: 0, coding: 0, sleep: 0, journal: 0 } };
-
-  // 1. Tasks (30 pts)
-  const tasks = dayData.tasks || [];
-  let tasksScore = 0;
-  if (tasks.length > 0) {
-    const completedCount = tasks.filter(t => t.completed).length;
-    tasksScore = Math.round((completedCount / tasks.length) * 30);
+// Calculate Daily Score: Simple & pure from actual completed tasks
+// Example: 5 tasks planned, 3 completed = 60%. If 0 tasks: 0%.
+export function calculateDailyScore(dayData) {
+  if (!dayData || !dayData.tasks || !Array.isArray(dayData.tasks) || dayData.tasks.length === 0) {
+    return { total: 0, completedCount: 0, totalCount: 0 };
   }
-
-  // 2. Fitness (20 pts) - On rest day, recovery walk or rest counts as fitness!
-  let fitnessScore = 0;
-  if (dayData.workouts && dayData.workouts.length > 0) {
-    fitnessScore = 20;
-  } else if (isRestDay) {
-    // Rest day: if rest task is checked or user marked rest
-    const restTask = tasks.find(t => t.isRestDay && t.completed);
-    if (restTask || dayData.restDayCompleted) fitnessScore = 20;
-  }
-
-  // 3. Study (20 pts)
-  let studyScore = 0;
-  if (dayData.study && dayData.study.length > 0) {
-    const mins = dayData.study.reduce((a, s) => a + (Number(s.durationMinutes) || 0), 0);
-    studyScore = Math.min(20, Math.round((mins / 60) * 20));
-  }
-
-  // 4. Coding (15 pts)
-  let codingScore = 0;
-  if (dayData.coding && dayData.coding.length > 0) {
-    const mins = dayData.coding.reduce((a, c) => a + (Number(c.durationMinutes) || 0), 0);
-    codingScore = Math.min(15, Math.round((mins / 60) * 15));
-  }
-
-  // 5. Sleep (10 pts)
-  let sleepScore = 0;
-  if (dayData.sleep && Number(dayData.sleep.durationHours) > 0) {
-    const hrs = Number(dayData.sleep.durationHours);
-    sleepScore = Math.min(10, Math.round((hrs / 8) * 10));
-  }
-
-  // 6. Journal (5 pts)
-  let journalScore = 0;
-  if (dayData.journal && (dayData.journal.win || dayData.journal.gratitude || dayData.journal.wrong)) {
-    journalScore = 5;
-  }
-
-  const total = Math.min(100, tasksScore + fitnessScore + studyScore + codingScore + sleepScore + journalScore);
-
-  return {
-    total,
-    breakdown: {
-      tasks: tasksScore,
-      fitness: fitnessScore,
-      study: studyScore,
-      coding: codingScore,
-      sleep: sleepScore,
-      journal: journalScore,
-    },
-  };
+  const completedCount = dayData.tasks.filter(t => t.completed).length;
+  const totalCount = dayData.tasks.length;
+  const total = Math.round((completedCount / totalCount) * 100);
+  return { total, completedCount, totalCount };
 }
 
 // Create Fresh State - ZERO DUMMY DATA
 export function createEmptyWinterArcState() {
   const currentDay = calculateCurrentDayNumber();
   const emptyRoutine = createEmptyRoutine();
+  const defaultCfg = { ...DEFAULT_ROUTINE_CONFIG };
 
   const days = {};
   for (let i = 1; i <= 100; i++) {
@@ -525,15 +474,21 @@ export function createEmptyWinterArcState() {
       status: status,
       score: 0,
       habitsCompleted: [],
-      tasks: buildAutomatedDayPlan(i, dateStr, emptyRoutine, [], {}, [], []),
+      tasks: buildAutomatedDayPlan(i, dateStr, defaultCfg, emptyRoutine, [], {}, [], []),
       workouts: [],
       study: [],
       coding: [],
       sleep: null,
+      meals: {
+        breakfast: { time: '08:00', description: '', completed: false },
+        lunch: { time: '13:00', description: '', completed: false },
+        dinner: { time: '20:00', description: '', completed: false },
+        snacks: { time: '16:30', description: '', completed: false },
+      },
       nutrition: {
+        water: 0,
         calories: 0,
         protein: 0,
-        water: 0,
         meals: [],
       },
       finance: [],
@@ -549,7 +504,7 @@ export function createEmptyWinterArcState() {
       avatar: '',
       age: '',
       height: '',
-      startingWeight: null, // "Not recorded" until user logs
+      startingWeight: null,
       targetWeight: null,
       currentWeight: null,
       startDate: START_DATE_STR,
@@ -566,25 +521,53 @@ export function createEmptyWinterArcState() {
       },
       onboardingComplete: false,
     },
-    routine: emptyRoutine, // Configurable weekly routine for Monday - Sunday
-    courses: [], // Configurable user courses with units & topics
+    routineConfig: defaultCfg,
+    routine: emptyRoutine,
+    courses: [
+      {
+        id: 'c-dbms',
+        name: 'DBMS',
+        code: '24CSXXXX',
+        semester: 'Semester 3',
+        priority: 'High',
+        units: [
+          {
+            id: 'u-1',
+            title: 'Unit 1: Foundations',
+            topics: [
+              { id: 't-1', name: 'ER Model', status: 'not_started' },
+              { id: 't-2', name: 'SQL Queries', status: 'not_started' },
+              { id: 't-3', name: 'Relational Keys', status: 'not_started' },
+            ],
+          },
+          {
+            id: 'u-2',
+            title: 'Unit 2: Design & Integrity',
+            topics: [
+              { id: 't-4', name: 'Normalization', status: 'not_started' },
+              { id: 't-5', name: 'Transactions & ACID', status: 'not_started' },
+            ],
+          },
+        ],
+      },
+    ],
     codingConfig: {
-      languages: [], // Java, Python, SQL, C++, etc.
+      languages: ['Java', 'Python', 'SQL'],
       schedule: {
-        monday: '',
-        tuesday: '',
-        wednesday: '',
-        thursday: '',
-        friday: '',
+        monday: 'Java',
+        tuesday: 'Python',
+        wednesday: 'SQL',
+        thursday: 'Java',
+        friday: 'Python',
         saturday: '',
         sunday: '',
       },
     },
-    revisions: [], // Spaced repetition schedule (1, 3, 7, 14 days)
-    workoutHistory: [], // Log of past workouts for previous performance comparison
-    habits: [], // Starts empty! User adds their own habits
+    revisions: [],
+    workoutHistory: [],
+    habits: [],
     days: days,
-    xpHistory: [], // Real log of every XP earned
+    xpHistory: [],
     stats: {
       totalXp: 0,
       currentStreak: 0,
@@ -595,41 +578,40 @@ export function createEmptyWinterArcState() {
       totalProblemsSolved: 0,
       moneySaved: 0,
     },
-    weightLog: [], // Starts empty: [{ date, weight, note }]
+    weightLog: [],
     achievements: INITIAL_ACHIEVEMENTS,
     notificationSettings: {
-      enabled: false, // Default OFF
-      permissionStatus: 'default',
+      enabled: false,
+      workout: false,
+      water: false,
+      meals: false,
+      study: false,
+      coding: false,
+      activity: false,
+      sleep: false,
+      journal: false,
       times: {
-        workout: '17:00',
+        workout: '17:30',
+        water: '09:00',
+        meals: '08:00',
         study: '09:00',
-        coding: '14:00',
-        habits: '12:00',
+        coding: '14:30',
+        activity: '19:00',
         journal: '21:30',
         sleep: '22:30',
-        weekly: '10:00',
-      },
-      reminders: {
-        workout: false,
-        study: false,
-        coding: false,
-        habits: false,
-        journal: false,
-        sleep: false,
-        weekly: false,
       },
       lastSentLog: {},
     },
     preferences: {
-      workoutDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
+      workoutDays: ['monday', 'wednesday', 'friday'],
       workoutTime: '17:30',
       studyDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
       studyTime: '09:00',
       codingDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-      codingTime: '14:00',
+      codingTime: '14:30',
     },
     morningCheckinDismissedDate: null,
-    weeklyReviews: {}, // { 'week-1': { whatWentWell: '', whatShouldImprove: '', nextFocus: '', completedAt: '' } }
+    weeklyReviews: {},
   };
 }
 
@@ -649,14 +631,14 @@ export function loadWinterArcData() {
       return fresh;
     }
 
-    // Ensure all new schema properties exist cleanly without overriding user records
     const emptyFresh = createEmptyWinterArcState();
-    const migrated = {
+    return {
       ...emptyFresh,
       ...parsed,
       user: { ...emptyFresh.user, ...(parsed.user || {}) },
+      routineConfig: { ...emptyFresh.routineConfig, ...(parsed.routineConfig || {}) },
       routine: { ...emptyFresh.routine, ...(parsed.routine || {}) },
-      courses: Array.isArray(parsed.courses) ? parsed.courses : [],
+      courses: Array.isArray(parsed.courses) ? parsed.courses : emptyFresh.courses,
       codingConfig: { ...emptyFresh.codingConfig, ...(parsed.codingConfig || {}) },
       revisions: Array.isArray(parsed.revisions) ? parsed.revisions : [],
       workoutHistory: Array.isArray(parsed.workoutHistory) ? parsed.workoutHistory : [],
@@ -664,8 +646,6 @@ export function loadWinterArcData() {
       preferences: { ...emptyFresh.preferences, ...(parsed.preferences || {}) },
       weeklyReviews: parsed.weeklyReviews || {},
     };
-
-    return migrated;
   } catch (err) {
     console.error('Failed to load Winter Arc data:', err);
     return createEmptyWinterArcState();

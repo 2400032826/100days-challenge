@@ -53,7 +53,7 @@ export function sendContextualNotification(title, options = {}) {
 }
 
 // Generate Contextual Messages based on today's real schedule
-export function getContextualNotificationMessage(type, { workoutFocus, courseName, topicName, codingLang, isRestDay } = {}) {
+export function getContextualNotificationMessage(type, { workoutFocus, courseName, topicName, codingLang, isRestDay, mealType, mealDesc, waterAmount } = {}) {
   switch (type) {
     case 'workout':
       if (isRestDay) {
@@ -65,48 +65,66 @@ export function getContextualNotificationMessage(type, { workoutFocus, courseNam
       return {
         title: 'Workout Reminder · Winter Arc',
         body: workoutFocus
-          ? `Today's workout: ${workoutFocus}. Ready to train?`
-          : 'Time for your daily workout session. Stay disciplined.',
+          ? `🏋️ Workout — ${workoutFocus}`
+          : '🏋️ Workout — Time for your physical training block.',
       };
 
     case 'study':
       return {
-        title: 'Deep Study Block · Winter Arc',
+        title: 'Study Reminder · Winter Arc',
         body: courseName
-          ? `Today's study: ${courseName}${topicName ? ` — ${topicName}` : ''}. Deep focus starts now.`
-          : 'Time for your daily study block. Build your knowledge.',
+          ? `📚 Study time — ${courseName}${topicName ? `: ${topicName}` : ''}`
+          : '📚 Study time — Open your books and begin your deep study block.',
       };
 
     case 'coding':
       return {
         title: 'Coding Session · Winter Arc',
         body: codingLang
-          ? `Today's coding session: ${codingLang}. Ready to write clean code?`
-          : 'Time for daily coding practice. Solve problems and commit.',
+          ? `💻 Coding session — ${codingLang}`
+          : '💻 Coding practice — Time to write clean code and solve problems.',
       };
 
-    case 'habits':
+    case 'water':
       return {
-        title: 'Habit Checkpoint · Winter Arc',
-        body: 'Check in on your daily non-negotiables. Don\'t break the chain.',
+        title: 'Hydration Check · Winter Arc',
+        body: waterAmount
+          ? `💧 Water reminder — Hydrate 250ml (${waterAmount} logged today).`
+          : '💧 Water reminder — Drink a glass of water to keep energy high.',
+      };
+
+    case 'meals':
+    case 'breakfast':
+    case 'lunch':
+    case 'dinner':
+      const mName = mealType ? mealType.charAt(0).toUpperCase() + mealType.slice(1) : 'Meal';
+      return {
+        title: `${mName} Reminder · Winter Arc`,
+        body: mealDesc ? `🍽️ ${mName} — ${mealDesc}` : `🍽️ Time for ${mName}. Fuel your body cleanly.`,
+      };
+
+    case 'activity':
+      return {
+        title: 'Activity Check · Winter Arc',
+        body: '🚶 Activity reminder — Take a 15-minute walk to move closer to your steps goal.',
       };
 
     case 'journal':
       return {
         title: 'Evening Reflection · Winter Arc',
-        body: 'Take 2 minutes to review your day, celebrate wins, and prepare for tomorrow.',
+        body: '📝 Journal reminder — Take 2 minutes to review your day and log your wins.',
       };
 
     case 'sleep':
       return {
         title: 'Sleep Wind-Down · Winter Arc',
-        body: 'Time to disconnect screens and prepare for 8-hour regenerative sleep.',
+        body: '😴 Sleep reminder — Shut down screens and prepare for 8-hour regenerative sleep.',
       };
 
     case 'weekly':
       return {
         title: 'Weekly Review Due · Winter Arc',
-        body: 'Sunday retrospective: assess your workouts, study hours, habits, and next week\'s priorities.',
+        body: 'Sunday retrospective: review your workouts, study, and upcoming week focus.',
       };
 
     default:

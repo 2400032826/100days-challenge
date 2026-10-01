@@ -19,6 +19,7 @@ import {
   Settings,
   Plus,
   CalendarDays,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -26,7 +27,8 @@ export default function Sidebar() {
   const user = data.user || {};
 
   const mainNav = [
-    { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/', label: 'Home', icon: LayoutDashboard },
+    { to: '/setup', label: 'Simple Setup', icon: SlidersHorizontal },
     { to: '/today', label: 'Today', icon: CalendarCheck },
     { to: '/routine', label: 'My Routine', icon: CalendarDays },
     { to: '/journey', label: '100-Day Journey', icon: Compass },

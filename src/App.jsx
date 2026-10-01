@@ -20,6 +20,7 @@ import AchievementsPage from './pages/AchievementsPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import RoutinePage from './pages/RoutinePage';
+import SetupPage from './pages/SetupPage';
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<DashboardPage />} />
+            <Route path="setup" element={<SetupPage />} />
             <Route path="today" element={<TodayPage />} />
             <Route path="routine" element={<RoutinePage />} />
             <Route path="journey" element={<JourneyPage />} />
